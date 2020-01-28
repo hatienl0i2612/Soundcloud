@@ -4,6 +4,8 @@ Soundcloud - A tool for download track [`Soundcloud`](https://soundcloud.com/).
 
 [![Capture1.png](https://i.postimg.cc/xdWVGfc2/Capture1.png)](https://postimg.cc/qtXF4dsb)
 
+[![Capture.png](https://i.postimg.cc/BZ8SpXX6/Capture.png)](https://postimg.cc/bdhfNY0c)
+
 
 # Module
   - Colorama
