@@ -1,14 +1,10 @@
-import argparse
-import io
 import itertools
 import os
+import re
 import sys
 import time
+
 import requests
-import re
-from colorama import Style, init, Fore, Back
-from download_http import Downloader
-from progress_bar import ProgressBar
 
 ACCENT_CHARS = dict(zip('ÂÃÄÀÁÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖŐØŒÙÚÛÜŰÝÞßàáâãäåæçèéêëìíîïðñòóôõöőøœùúûüűýþÿ',
                         itertools.chain('AAAAAA', ['AE'], 'CEEEEIIIIDNOOOOOOO', ['OE'], 'UUUUUY', ['TH', 'ss'],

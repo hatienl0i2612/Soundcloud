@@ -1,10 +1,16 @@
-from utils import *
+import argparse
+import io
+
 from color import *
+from download_http import Downloader
+from progress_bar import ProgressBar
+from session import get_req
+from utils import *
+
 
 class ExtractSoundCloud(ProgressBar):
     def __init__(self, *args, **kwargs):
         self._url = kwargs.get('url')
-        self._session = session
         self._file_save = kwargs.get('file_save')
         self._show_all_info = kwargs.get('show_all_info')
         self._headers = HEADERS
@@ -13,7 +19,6 @@ class ExtractSoundCloud(ProgressBar):
         self._BASE_URL = 'https://soundcloud.com/'
         self._IMAGE_REPL_RE = r'-([0-9a-z]+)\.jpg'
         self._cliend_id = ''
-        super(ExtractSoundCloud).__init__()
 
     def run(self):
         return self._real_extract()
@@ -30,38 +35,63 @@ class ExtractSoundCloud(ProgressBar):
                           (?:/?\?secret_token=(?P<secret_token>[^&]+))?)
                     )
                     '''
-        regex_url = re.match(string_regex_track, self._url)
-        track_id = regex_url.group('track_id')
-        query = {}
-        if track_id:
-            info_json_url = self._API_V2_BASE + 'tracks/' + track_id
-            full_title = track_id
-            token = regex_url.group('secret_token')
-            if token:
-                query['secret_token'] = token
-        else:
-            full_title = resolve_title = '%s/%s' % regex_url.group('uploader', 'title')
-            token = regex_url.group('token')
-            if token:
-                resolve_title += '/%s' % token
-            info_json_url = self._API_V2_BASE + 'resolve?url=' + self._BASE_URL + resolve_title
+        string_regex_track_sets = r'https?://(?:(?:www|m)\.)?soundcloud\.com/(?P<uploader>[\w\d-]+)/sets/(?P<title>[\w\d-]+)(?:/(?P<token>[^?/]+))?'
+
         sys.stdout.write(fg + '[' + fc + '*' + fg + '] : Extracting client id\n')
         self._cliend_id = Cache(site='soundcloud', text=self._cliend_id, key='client_id', type='json').load()
         if not self._cliend_id:
             self._cliend_id = self._find_client_id()
             Cache(site='soundcloud', text=self._cliend_id, key='client_id', type='json').store()
-        dict_info_track = self._extract_info_dict(url_info=info_json_url, client_id=self._cliend_id, query=query)
-        return self._download_track(dict_info_track=dict_info_track, _show_all_info=self._show_all_info)
+
+        regex_url = re.match(string_regex_track, self._url)
+        regex_url_sets = re.match(string_regex_track_sets, self._url)
+
+        query = {}
+        if regex_url:
+            track_id = regex_url.group('track_id')
+            if track_id:
+                token = regex_url.group('secret_token')
+                if token:
+                    query['secret_token'] = token
+
+        if regex_url:
+            dict_info_track = self._extract_info_dict(url_info=self._API_V2_BASE + 'resolve?url=' + self._url,
+                                                      client_id=self._cliend_id, query=query)
+            return self._download_track(dict_info_track=dict_info_track, _show_all_info=self._show_all_info)
+        elif regex_url_sets:
+            return self._extract_info_dict_for_sets(query=query,
+                                                    url_info=self._API_V2_BASE + 'resolve?url=' + self._url,
+                                                    client_id=self._cliend_id)
 
     def _find_client_id(self):
-        res = self._session.get(url='https://soundcloud.com/', headers=self._headers)
+        res = get_req(url='https://soundcloud.com/', headers=self._headers)
         for src in reversed(re.findall(r'<script[^>]+src="([^"]+)"', res.text)):
-            res_js_script = self._session.get(url=src, headers=self._headers)
+            res_js_script = get_req(url=src, headers=self._headers)
             if res_js_script:
                 cliend_id = re.findall(r'client_id\s*:\s*"([0-9a-zA-Z]{32})"', res_js_script.text)
                 if cliend_id:
                     return cliend_id[0]
         raise SoundCloudException('Unable to extract client id')
+
+    def _extract_info_dict_for_sets(self, *args, **kwargs):
+        query = kwargs.get('query', {}).copy()
+        query['client_id'] = kwargs.get('client_id')
+        url_info = kwargs.get('url_info')
+        response = get_req(url=url_info, headers=self._headers, params=query)
+        res_json = response.json()
+
+        _title = res_json.get('title')
+        _id = res_json.get('id')
+        _tracks = res_json.get('tracks')
+        sys.stdout.write(fg + '[' + fc + '*' + fg + '] : Playlist %s found %s track.\n' % (_title, len(_tracks)))
+        if _tracks:
+            for ele, track in enumerate(_tracks):
+                _id_track = track.get('id')
+                dict_info_track = self._extract_info_dict(query=query,
+                                                          url_info=self._API_V2_BASE + 'resolve?url=' + self._API_BASE + 'tracks/' + str(
+                                                              _id_track),
+                                                          client_id=self._cliend_id, ele=ele + 1)
+                self._download_track(dict_info_track=dict_info_track, _show_all_info=self._show_all_info, ele=ele + 1)
 
     def _extract_info_dict(self, *args, **kwargs):
         ele = kwargs.get('ele') or ''
@@ -70,21 +100,16 @@ class ExtractSoundCloud(ProgressBar):
         query = kwargs.get('query', {}).copy()
         query['client_id'] = kwargs.get('client_id')
         url_info = kwargs.get('url_info')
-        response = self._session.get(url=url_info, headers=self._headers, params=query)
+        response = get_req(url=url_info, headers=self._headers, params=query)
         res_json = response.json()
         format_urls = set()
         formats = []
 
-        try:
-            _description = res_json.get('description')
-            _title = res_json.get('title')
-            _artwork_url = res_json.get('artwork_url')
-            _id = res_json.get('id')
-        except (AttributeError, KeyError, TypeError, IndexError):
-            _title = ''
-            _id = ''
-            _artwork_url = ''
-            _description = ''
+        _description = res_json.get('description')
+        _title = res_json.get('title')
+        _artwork_url = res_json.get('artwork_url')
+        _id = res_json.get('id')
+
         formats.append({
             'title': _title,
             'id': _id,
@@ -148,13 +173,11 @@ class ExtractSoundCloud(ProgressBar):
         sys.stdout.write(fg + '\r[' + fc + '*' + fg + '] : Extracting info of track %s. (done)\n' % (ele))
         return formats
 
-
-
     def _download_track(self, *args, **kwargs):
         _show_all_info = kwargs.get('_show_all_info') or False
         dict_info_track = kwargs.get('dict_info_track')
         title = sanitize_filename(s=dict_info_track[0].get('title'))
-        n_show = get_name_show_cmd(ele=kwargs.get('ele'),title=title)
+        n_show = get_name_show_cmd(ele=kwargs.get('ele'), title=title)
         path_save = '%s/%s' % (self._file_save, 'DOWNLOAD')
         if not os.path.exists(path=path_save):
             os.mkdir(path_save)
@@ -162,9 +185,12 @@ class ExtractSoundCloud(ProgressBar):
             fg + '[' + fc + '*' + fg + '] : Starting download track %s.\n' % (n_show))
         if self._show_all_info is True:
             des = dict_info_track[0]
-            with io.open('%s/%s.txt' % (path_save, title), 'w', encoding='utf-8') as f:
+            io_file = '%s/%s.txt' % (path_save, title)
+            with io.open(io_file, 'w', encoding='utf-8') as f:
                 for k, v in des.items():
                     f.writelines('%s  :  %s\n\n' % (k, v))
+            sys.stdout.write(
+                fg + '[' + fc + '*' + fg + '] : %s.\n\n' % (io_file))
         else:
             protocol_m3u8_hls_mp3_128 = ''
             protocol_m3u8_hls_opus_64 = ''
@@ -193,22 +219,13 @@ class ExtractSoundCloud(ProgressBar):
                 print('use ffmpeg to download {}'.format(protocol_m3u8_hls_mp3_128))
 
     def _extract_url_transcodings(self, url_trans, query):
-        res = self._session.get(url=url_trans, params=query, headers=self._headers)
+        res = get_req(url=url_trans, params=query, headers=self._headers)
         return res.json()
 
 
 class ExtractSoundCloudPlaylist(ExtractSoundCloud):
     def __init__(self, *args, **kwargs):
-        self._url = kwargs.get('url')
-        self._session = session
-        self._file_save = kwargs.get('file_save')
-        self._show_all_info = kwargs.get('show_all_info')
-        self._headers = HEADERS
-        self._API_BASE = 'https://api.soundcloud.com/'
-        self._API_V2_BASE = 'https://api-v2.soundcloud.com/'
-        self._BASE_URL = 'https://soundcloud.com/'
-        self._IMAGE_REPL_RE = r'-([0-9a-z]+)\.jpg'
-        self._cliend_id = ''
+        super(ExtractSoundCloudPlaylist, self).__init__(*args, **kwargs)
         self._BASE_URL_MAP = {
             'all': 'stream/users/%s',
             'tracks': 'users/%s/tracks',
@@ -218,7 +235,6 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
             'likes': 'users/%s/likes',
             'spotlight': 'users/%s/spotlight',
         }
-        super(ExtractSoundCloudPlaylist).__init__()
 
     def run(self):
         return self._real_extract()
@@ -258,14 +274,21 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
                                                query=query)
         tracks = info_playlist.get('collection')
         sys.stdout.write(fg + '[' + fc + '*' + fg + '] : Playlist %s found %s track.\n' % (self.username, len(tracks)))
-
         for ele, value in enumerate(tracks):
-            track = value.get('track')
-            permalink_url = track.get('permalink_url')
-            dict_info_track = self._extract_info_dict(query=query,
-                                                      url_info=self._API_V2_BASE + 'resolve?url=' + permalink_url,
-                                                      client_id=self._cliend_id, ele=ele + 1)
-            self._download_track(dict_info_track=dict_info_track, _show_all_info=self._show_all_info, ele = ele + 1)
+            _type = value.get('type')
+            if 'track' in _type:
+                track = value.get('track')
+                permalink_url = track.get('permalink_url')
+                dict_info_track = self._extract_info_dict(query=query,
+                                                          url_info=self._API_V2_BASE + 'resolve?url=' + permalink_url,
+                                                          client_id=self._cliend_id, ele=ele + 1)
+                self._download_track(dict_info_track=dict_info_track, _show_all_info=self._show_all_info, ele=ele + 1)
+            elif 'playlist' in _type:
+                playlist_set = value.get('playlist')
+                permalink_url = playlist_set.get('permalink_url')
+                self._extract_info_dict_for_sets(query=query,
+                                                 url_info=self._API_V2_BASE + 'resolve?url=' + permalink_url,
+                                                 client_id=self._cliend_id)
 
     def _extract_playlist(self, url, query):
         query['client_id'] = self._cliend_id
@@ -273,14 +296,14 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
             'limit': 2000000000,
             'linked_partitioning': '1',
         })
-        res = self._session.get(url=url, headers=self._headers, params=query)
+        res = get_req(url=url, headers=self._headers, params=query)
         if not isinstance(res.json(), dict):
             return
         return res.json()
 
     def _get_info_user(self, url, query):
         query['client_id'] = self._cliend_id
-        res = self._session.get(url=url, headers=self._headers, params=query)
+        res = get_req(url=url, headers=self._headers, params=query)
         if not isinstance(res.json(), dict):
             return
         return res.json()

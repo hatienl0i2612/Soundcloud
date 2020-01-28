@@ -1,10 +1,8 @@
-import os
-import sys
 import time
 
 import requests
 from requests import RequestException
-from color import *
+
 from progress_bar import *
 
 
