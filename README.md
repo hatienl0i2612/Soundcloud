@@ -31,3 +31,7 @@ Soundcloud - A tool for download track [`Soundcloud`](https://soundcloud.com/).
   - `-s` or `--saved` : Saved file name.
   - `-i` or `--info` : Show all info of track to file .txt .
   - `-l` or `--playlist` : Download playlist of user.
+
+# Contact
+  - [`facebook`](https://www.facebook.com/hatien.l0i2612/)
+  - `hatienloi261299@gmail.com`
