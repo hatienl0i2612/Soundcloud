@@ -1,8 +1,11 @@
 import datetime
 import sys
+import itertools
+import time
 
 from color import *
 
+_spin = itertools.cycle(['▲', '►', '▼', '◄'])
 
 class ProgressBar(object):
 
@@ -10,8 +13,8 @@ class ProgressBar(object):
                   downloaded='', rate='', suffix='', bar_length=25):
         filledLength = int(round(bar_length * iteration / float(total)))
         percents = format(100.00 * (iteration / float(total)), '.2f')
-        bar = fc + sd + '#' * filledLength + fw + sd + '-' * (bar_length - filledLength)
-        # bar = fc + sd + '▓' * filledLength + fw + sd +'-' * (bar_length - filledLength)
+        # bar = fc + sd + '#' * filledLength + fw + sd + '-' * (bar_length - filledLength)
+        bar = fc + sd + '▓' * filledLength + fw + sd +'-' * (bar_length - filledLength)
         if ver == 'hls':
             sys.stdout.write(
                 '\033[2K\033[1G\r\r{}{}[{}{}*{}{}] : {}{}Length-video : [ {}/{} ] ╢{}{}{}╟  Percent : {}% '.format(
@@ -71,3 +74,8 @@ class ProgressBar(object):
                        video_time=video_time,
                        ts_time=ts_time
                        )
+    def spinner(self,text):
+        spin = _spin.__next__()
+        sys.stdout.write(text + spin)
+        sys.stdout.flush()
+        time.sleep(0.01)

@@ -2,6 +2,7 @@ import argparse
 import io
 
 from color import *
+from download_hls import Download_m3u8
 from download_http import Downloader
 from progress_bar import ProgressBar
 from session import get_req
@@ -62,6 +63,9 @@ class ExtractSoundCloud(ProgressBar):
             return self._extract_info_dict_for_sets(query=query,
                                                     url_info=self._API_V2_BASE + 'resolve?url=' + self._url,
                                                     client_id=self._cliend_id)
+        else:
+            sys.stdout.write(fg + '[' + fb + '+' + fg + '] : Use -l or --playlist to download a playlist of user, please run again.')
+            sys.exit()
 
     def _find_client_id(self):
         res = get_req(url='https://soundcloud.com/', headers=self._headers)
@@ -83,7 +87,7 @@ class ExtractSoundCloud(ProgressBar):
         _title = res_json.get('title')
         _id = res_json.get('id')
         _tracks = res_json.get('tracks')
-        sys.stdout.write(fg + '[' + fc + '*' + fg + '] : Playlist %s found %s track.\n' % (_title, len(_tracks)))
+        sys.stdout.write(fw + sd + '[' + fb + sd + '*' + fw + sd + '] : Playlist sets %s found %s track.\n' % (_title, len(_tracks)))
         if _tracks:
             for ele, track in enumerate(_tracks):
                 _id_track = track.get('id')
@@ -96,7 +100,7 @@ class ExtractSoundCloud(ProgressBar):
     def _extract_info_dict(self, *args, **kwargs):
         ele = kwargs.get('ele') or ''
         text = fg + '\r[' + fc + '*' + fg + '] : Extracting info of track %s ... ' % (ele)
-        spinner(text=text)
+        self.spinner(text=text)
         query = kwargs.get('query', {}).copy()
         query['client_id'] = kwargs.get('client_id')
         url_info = kwargs.get('url_info')
@@ -152,7 +156,7 @@ class ExtractSoundCloud(ProgressBar):
             if not isinstance(stream, dict):
                 continue
             stream_url = stream.get('url')
-            spinner(text=text)
+            self.spinner(text=text)
             if invalid_url(stream_url):
                 continue
             format_urls.add(stream_url)
@@ -216,7 +220,10 @@ class ExtractSoundCloud(ProgressBar):
                         fc + sd + "\n[" + fr + sb + "-" + fc + sd + "] : " + fr + sd + "User Interrupted..\n")
                     sys.exit(0)
             elif protocol_m3u8_hls_mp3_128:
-                print('use ffmpeg to download {}'.format(protocol_m3u8_hls_mp3_128))
+                down = Download_m3u8(urlM3u8=protocol_m3u8_hls_mp3_128, name=title, callback=self.show_progress,
+                                     DirDownload=path_save, ext='mp3')
+                down.run()
+                print('\n')
 
     def _extract_url_transcodings(self, url_trans, query):
         res = get_req(url=url_trans, params=query, headers=self._headers)
@@ -250,8 +257,13 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
                                     /?(?:[?#].*)?$
                             '''
         mobj = re.match(string_regex, self._url)
-        uploader = mobj.group('user')
-        resource = mobj.group('rsrc') or 'all'
+        uploader,resource = None,None
+        if mobj:
+            uploader = mobj.group('user')
+            resource = mobj.group('rsrc') or 'all'
+        elif 'sets' in self._url:
+            sys.stdout.write(fg + '[' + fb + '+' + fg + '] : Use -u or --url to download sets url, please run again.')
+            sys.exit()
         url_info_user = self._API_V2_BASE + 'resolve?url=' + self._BASE_URL + uploader
         sys.stdout.write(fg + '[' + fc + '*' + fg + '] : Extracting client id\n')
         query = {}
@@ -273,7 +285,7 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
         info_playlist = self._extract_playlist(url=self._API_V2_BASE + self._BASE_URL_MAP[resource] % id_user,
                                                query=query)
         tracks = info_playlist.get('collection')
-        sys.stdout.write(fg + '[' + fc + '*' + fg + '] : Playlist %s found %s track.\n' % (self.username, len(tracks)))
+        sys.stdout.write(fw + sd + '[' + fb + sd + '*' + fw + sd + '] : Playlist %s found %s track.\n' % (self.username, len(tracks)))
         for ele, value in enumerate(tracks):
             _type = value.get('type')
             if 'track' in _type:
@@ -318,7 +330,7 @@ class Cache():
 
     def _get_root_path(self):
         env = os.getenv('XDG_CACHE_HOME', '~/.cache')
-        res = os.path.join(env, 'abc-cache')
+        res = os.path.join(env, 'tm-cache')
         return os.path.expandvars(os.path.expanduser(res))
 
     def _get_cache_path(self):

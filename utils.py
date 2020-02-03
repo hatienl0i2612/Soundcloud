@@ -10,6 +10,17 @@ ACCENT_CHARS = dict(zip('ÂÃÄÀÁÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖŐØŒÙ�
                         itertools.chain('AAAAAA', ['AE'], 'CEEEEIIIIDNOOOOOOO', ['OE'], 'UUUUUY', ['TH', 'ss'],
                                         'aaaaaa', ['ae'], 'ceeeeiiiionooooooo', ['oe'], 'uuuuuy', ['th'], 'y')))
 
+another_user = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)'
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'en-us,en;q=0.5',
+}
+session = requests.Session()
+CURRENT_DIR = os.getcwd()
+
 
 def sanitize_filename(s, restricted=False, is_id=False):
     def replace_insane(char):
@@ -45,30 +56,11 @@ def sanitize_filename(s, restricted=False, is_id=False):
     return result
 
 
-another_user = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)'
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-    'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'en-us,en;q=0.5',
-}
-session = requests.Session()
-CURRENT_DIR = os.getcwd()
-
-_spin = itertools.cycle(['▲', '►', '▼', '◄'])
-
 
 def get_name_show_cmd(ele, title):
     if ele:
         return '(%s)  %s' % (ele, title)
     return '(%s)' % (title)
-
-def spinner(text):
-    spin = _spin.__next__()
-    sys.stdout.write(text + spin)
-    sys.stdout.flush()
-    time.sleep(0.01)
 
 
 KNOWN_EXTENSIONS = (
