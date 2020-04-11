@@ -1,37 +1,62 @@
-# Download_Soundcloud
+# ***Download Soundcloud***
 
-Soundcloud - A tool for download track [`Soundcloud`](https://soundcloud.com/).
+***Soundcloud - A tool for download track of [`Soundcloud`](https://soundcloud.com/).***
 
-[![Capture1.png](https://i.postimg.cc/xdWVGfc2/Capture1.png)](https://postimg.cc/qtXF4dsb)
+[![Capture.png](https://i.postimg.cc/qqd8ZWGP/Capture.png)](https://postimg.cc/1nJn8C2B)
 
-[![Capture.png](https://i.postimg.cc/BZ8SpXX6/Capture.png)](https://postimg.cc/bdhfNY0c)
-
-
-# Module
+# ***Module***
   - Colorama
   - Requests
      ```
      pip install -r requirements.txt
      ```  
  
-# Usage
-[![Capturec.png](https://i.postimg.cc/qRzY596G/Capturec.png)](https://postimg.cc/jwYZW3XW)
-  - Install module
+# ***Usage***
+
+```
+$ python soundcloud.py -h
+usage: soundcloud.py [-h] [-s] [-j] url
+
+Soundcloud - A tool for download track Soundcloud.
+
+positional arguments:
+  url           Url.
+
+optional arguments:
+  -h, --help    show this help message and exit
+
+Options:
+  -s , --save   Path to save
+  -j, --json    Show json of info media.
+  ```
+
+  - ***Install module***
       ```
       pip install -r requirements.txt
       ```
-  - Run 
+  - ***Run*** 
       ```
-      python soundcloud.py -u [url]
+      python soundcloud.py [url]
       ```
-  All the track downloaded in folder DOWNLOAD at the same path
+  ***All the track downloaded in folder DOWNLOAD at the same path***
 
-# Options
-  - `-u` or `--url` : url download
+# ***Options***
   - `-s` or `--saved` : Saved file name.
-  - `-i` or `--info` : Show all info of track to file .txt .
-  - `-l` or `--playlist` : Download playlist of user.
+  - `-j` or `--json`  : Print json info.
+  
+# ***Url Supported***
+- Track url : ```https://soundcloud.com/<uploader>/<slug>```
+- Playlist sets : ```https://soundcloud.com/<uploader>/sets/<slug>```
+- Playlist tracks of user : 
+    ```
+    https://soundcloud.com/<name user>
+    https://soundcloud.com/<name user>/popular-tracks
+    https://soundcloud.com/<name user>/tracks
+    https://soundcloud.com/<name user>/sets
+    https://soundcloud.com/<name user>/reposts
+    https://soundcloud.com/<name user>/albums
+    ``` 
 
-# Contact
+# ***Note***
   - [`facebook`](https://www.facebook.com/hatien.l0i2612/)
   - `hatienloi261299@gmail.com`
