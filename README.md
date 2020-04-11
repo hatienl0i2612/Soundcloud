@@ -38,6 +38,8 @@ Options:
       ```
       python soundcloud.py [url]
       ```
+  ***Some url is hls, need setup [ffmpeg](https://www.ffmpeg.org/)***
+  
   ***All the track downloaded in folder DOWNLOAD at the same path***
 
 # ***Options***
