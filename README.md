@@ -4,13 +4,6 @@
 
 [![Capture.png](https://i.postimg.cc/qqd8ZWGP/Capture.png)](https://postimg.cc/1nJn8C2B)
 
-# ***Module***
-  - Colorama
-  - Requests
-     ```
-     pip install -r requirements.txt
-     ```  
- 
 # ***Usage***
 
 ```
@@ -30,21 +23,20 @@ Options:
   -j, --json    Show json of info media.
   ```
 
-  - ***Install module***
-      ```
-      pip install -r requirements.txt
-      ```
-  - ***Run*** 
-      ```
-      python soundcloud.py [url]
-      ```
-  ***Some url is hls, need setup [ffmpeg](https://www.ffmpeg.org/)***
-  
-  ***All the track downloaded in folder DOWNLOAD at the same path***
+- ***Install module***
+  ```
+  pip install -r requirements.txt
+  ```
+- ***Run*** 
+  ```
+  python soundcloud.py [url]
+  ```
+
+- ***All the track downloaded in folder DOWNLOAD at the same path***
 
 # ***Options***
-  - `-s` or `--saved` : Saved file name.
-  - `-j` or `--json`  : Print json info.
+- `-s` or `--saved` : Saved file name.
+- `-j` or `--json`  : Print json info.
   
 # ***Url Supported***
 - Track url : ```https://soundcloud.com/<uploader>/<slug>```
@@ -58,6 +50,7 @@ Options:
     https://soundcloud.com/<name user>/reposts
     https://soundcloud.com/<name user>/albums
     ``` 
+- ***Some url is hls, need setup [ffmpeg](https://www.ffmpeg.org/)***
 
 # ***Note***
   - [`facebook`](https://www.facebook.com/hatien.l0i2612/)
