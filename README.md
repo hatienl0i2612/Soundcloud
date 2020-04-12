@@ -37,6 +37,8 @@ Options:
 # ***Options***
 - `-s` or `--saved` : Saved file name.
 - `-j` or `--json`  : Print json info.
+- ***Some url is hls, need setup [ffmpeg](https://www.ffmpeg.org/)***
+
   
 # ***Url Supported***
 - Track url : ```https://soundcloud.com/<uploader>/<slug>```
@@ -50,7 +52,6 @@ Options:
     https://soundcloud.com/<name user>/reposts
     https://soundcloud.com/<name user>/albums
     ``` 
-- ***Some url is hls, need setup [ffmpeg](https://www.ffmpeg.org/)***
 
 # ***Note***
   - [`facebook`](https://www.facebook.com/hatien.l0i2612/)
