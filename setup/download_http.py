@@ -39,10 +39,10 @@ class Downloader(object):
             self._filename = self._generate_unsafe_filename()
         return self._filename
 
-    def _generate_filename():
+    def _generate_filename(self):
         pass
 
-    def _generate_unsafe_filename():
+    def _generate_unsafe_filename(self):
         pass
 
     def download(self, filepath="", unsafe=False, quiet=False, callback=lambda *x: None):
@@ -64,11 +64,11 @@ class Downloader(object):
             filepath_vtt2srt = filepath.replace('.vtt', '.srt')
             if os.path.isfile(filepath_vtt2srt):
                 to_screen("already downloaded")
-                return 
+                return
 
         if os.path.isfile(filepath):
             to_screen("already downloaded")
-            return 
+            return
 
         temp_filepath = filepath + ".part"
 
@@ -98,7 +98,7 @@ class Downloader(object):
                 response = self._sess.get(self.url, headers=headers, stream=True, timeout=10)
             except ConnectionError as error:
                 to_screen('ConnectionError: %s' % (str(error)))
-                return 
+                return
             with response:
                 if response.ok:
                     bytes_to_be_downloaded = total = int(response.headers.get('Content-Length'))
@@ -143,7 +143,7 @@ class Downloader(object):
             raise error
         except Exception as error:
             to_screen("Reason : {}".format(str(error)))
-            return 
+            return
         if os.path.isfile(temp_filepath):
             total_bytes_done = os.stat(temp_filepath).st_size
             if total_bytes_done == bytes_to_be_downloaded:
@@ -156,6 +156,5 @@ class Downloader(object):
 
         if not self._active:
             os.rename(temp_filepath, filepath)
-            retVal = {"status": True, "msg": "download"}
         sys.stdout.write("\n")
-        return 
+        return

@@ -2,8 +2,6 @@
 
 ***Soundcloud - A tool for download track of [`Soundcloud`](https://soundcloud.com/).***
 
-[![Capture.png](https://i.postimg.cc/qqd8ZWGP/Capture.png)](https://postimg.cc/1nJn8C2B)
-
 # ***Usage***
 
 ```

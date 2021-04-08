@@ -6,11 +6,11 @@ class ExtractSoundCloud(ProgressBar):
                         (?:(?:(?:www\.|m\.)?soundcloud\.com/
                                 (?!stations/track)
                                 (?P<uploader>[\w\d-]+)/
-                                (?!(?:tracks|albums|sets(?:/.+?)?|reposts|likes|spotlight)/?(?:$|[?#]))
+                                (?!(?:tracks|popular-tracks|albums|sets(?:/.+?)?|reposts|likes|spotlight)/?(?:$|[?#]))
                                 (?P<title>[\w\d-]+)/?
                                 (?P<token>[^?]+?)?(?:[?].*)?$)
-                           |(?:api(?:-v2)?\.soundcloud\.com/tracks/(?P<track_id>\d+)
-                              (?:/?\?secret_token=(?P<secret_token>[^&]+))?)
+                        |(?:api(?:-v2)?\.soundcloud\.com/tracks/(?P<track_id>\d+)
+                            (?:/?\?secret_token=(?P<secret_token>[^&]+))?)
                         )
                         '''
     _regex_track_set = r'''(?x)https?://(?:(?:www|m)\.)?soundcloud\.com/(?P<uploader>[\w\d-]+)/sets/(?P<title>[\w\d-]+)(?:/(?P<token>[^?/]+))?'''
@@ -186,7 +186,7 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
                                     (?:(?:www|m)\.)?soundcloud\.com/
                                     (?P<user>[^/]+)
                                     (?:/
-                                        (?P<rsrc>tracks|albums|sets|reposts|likes|spotlight)
+                                        (?P<rsrc>tracks|popular-tracks|albums|sets|reposts|likes|spotlight)
                                     )?
                                     /?(?:[?#].*)?$
                             '''
@@ -195,6 +195,7 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
         super(ExtractSoundCloudPlaylist, self).__init__(*args, **kwargs)
         self._BASE_URL_MAP = {
             'all': 'stream/users/%s',
+            'popular-tracks':'users/%s/toptracks',
             'tracks': 'users/%s/tracks',
             'albums': 'users/%s/albums',
             'sets': 'users/%s/playlists',
@@ -225,7 +226,7 @@ class ExtractSoundCloudPlaylist(ExtractSoundCloud):
             headers=self._headers,
             type='json',
             params={
-                'limit': 2000000000,
+                'limit': 20000,
                 'linked_partitioning': '1',
                 "client_id": self._cliend_id
             },
